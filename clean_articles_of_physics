@@ -1,0 +1,37 @@
+import json
+import pandas as pd
+from google.colab import files
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+with open('/content/drive/MyDrive/json/openalexco.json','r') as miarchivo:
+    objeto=miarchivo.read()
+objeto=json.loads(objeto)
+
+def filter_concept(concepts,concept='Physics'):    # método de dos argumentos, concepts is the Json and concept is a variable that will search the word physics
+    return any([True for c in concepts if c.get('display_name')==concept]) # el iterador c recorre en display_name, escoja el concepto Physics y retornelo
+    
+def filter_ror(authorships,ror="https://ror.org/03bp5hc83"):
+  return any([any([i.get('ror')=="https://ror.org/03bp5hc83" for i in a.get('institutions')])  for a in authorships]) #este método filtra por el ror de la UdeA
+     
+def filter_id(authorships,id="https://openalex.org/A2764531557"):
+  return any([a.get('author').get('id')==id  for a in authorships if a.get('author')]) #este método filtra por el id de Álvaro Morales
+  
+  
+
+p0=[d for d in objeto if filter_concept(d.get('concepts'),concept='Physics') ] #Nivel 0 para seleccionar lo referente a physics
+del(objeto)
+
+p1=[d for d in p0 if (filter_concept(d.get('concepts'),concept='Condensed matter physics') or #filtro a nivel 1
+                      filter_concept(d.get('concepts'),concept='Optoelectronics'))]
+                      
+p2=[d for d in p0 if (filter_concept(d.get('concepts'),concept='Quantum dot') or 
+                      filter_concept(d.get('concepts'),concept='Semiconductor') or #filtro a nivel 2
+                      filter_concept(d.get('concepts'),concept='Heterojunction'))]                    
+                      
+p_udea=[d for d in p0 if filter_ror(d.get('authorships'),ror="https://ror.org/03bp5hc83")] #los artículos de física de UdeA
+
+p_id=[c for c in p_udea if filter_id(c.get('authorships'))] #los artículos de Álvaro Morales de física en la UdeA
+
+len(p0),len(p1),len(p2),len(p_udea),len(p_id) #el tamaño de las listas a nivel 0, nivel 1, nivel 2, UdeA y de mi asesor.
